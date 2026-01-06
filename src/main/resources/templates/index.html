@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GymTracker - Трекер тренировок</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0f0f14;
+            --bg-secondary: #1a1a24;
+            --bg-card: #22222e;
+            --bg-elevated: #2a2a38;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --text-muted: #606070;
+            --accent-primary: #7c3aed;
+            --accent-secondary: #a855f7;
+            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #ec4899 100%);
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border-color: #333344;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body {
+            background: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(124, 58, 237, 0.15), transparent),
+                radial-gradient(ellipse 60% 40% at 100% 100%, rgba(236, 72, 153, 0.1), transparent),
+                var(--bg-primary);
+        }
+
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 16px;
+            padding-bottom: 100px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0 24px;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-logo {
+            width: 44px;
+            height: 44px;
+            background: var(--accent-gradient);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .header-text h1 {
+            font-size: 20px;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-text p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-elevated);
+            border: 2px solid var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: var(--bg-secondary);
+            padding: 6px;
+            border-radius: var(--radius-lg);
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tab.active {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-tab:not(.active):hover {
+            color: var(--text-primary);
+            background: var(--bg-elevated);
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Today's Workout Section */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .date-badge {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+        }
+
+        /* Workout Cards */
+        .workout-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .workout-card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .workout-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .exercise-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .exercise-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .exercise-name {
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 2px;
+        }
+
+        .exercise-category {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .delete-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            background: rgba(239, 68, 68, 0.1);
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .delete-btn:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Sets */
+        .sets-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .set-row {
+            display: grid;
+            grid-template-columns: 40px 1fr 1fr 40px;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .set-number {
+            width: 32px;
+            height: 32px;
+            background: var(--bg-elevated);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .set-number.warmup {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .set-number.failure {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .set-input {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .set-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            background: var(--bg-card);
+        }
+
+        .set-input::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .set-delete {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .set-delete:hover {
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Add Set Button */
+        .add-set-btn {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-set-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            background: rgba(124, 58, 237, 0.05);
+        }
+
+        /* Add Exercise Button */
+        .add-exercise-btn {
+            width: 100%;
+            padding: 20px;
+            border: none;
+            border-radius: var(--radius-lg);
+            background: var(--accent-gradient);
+            color: white;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            margin-top: 16px;
+        }
+
+        .add-exercise-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .add-exercise-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Categories Grid */
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .category-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 16px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .category-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .category-card.selected {
+            border-color: var(--accent-primary);
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        .category-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .category-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        /* Exercise List */
+        .exercise-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .exercise-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+        }
+
+        .exercise-item:hover {
+            border-color: var(--accent-primary);
+            background: rgba(124, 58, 237, 0.05);
+        }
+
+        .exercise-item-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .exercise-item-add {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        /* Progress Section */
+        .progress-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .progress-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .progress-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .progress-select {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .progress-select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .chart-container {
+            height: 200px;
+            margin-top: 16px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* History Section */
+        .history-item {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .history-item:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .history-date {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .history-exercises {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .history-exercise-tag {
+            background: var(--bg-elevated);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+            width: 100%;
+            max-width: 480px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 24px;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: none;
+            color: var(--text-secondary);
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+
+        /* Search */
+        .search-input {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 14px;
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-text {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--bg-elevated);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            padding: 14px 24px;
+            border-radius: var(--radius-lg);
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: var(--shadow-lg);
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title">
+                <div class="header-logo">🏋️</div>
+                <div class="header-text">
+                    <h1>GymTracker</h1>
+                    <p id="greeting">Добро пожаловать!</p>
+                </div>
+            </div>
+            <div class="user-avatar" id="userAvatar">?</div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-tab="workout">Тренировка</button>
+            <button class="nav-tab" data-tab="progress">Прогресс</button>
+            <button class="nav-tab" data-tab="history">История</button>
+        </div>
+
+        <!-- Workout Tab -->
+        <div class="tab-content active" id="workout-tab">
+            <div class="section-header">
+                <span class="section-title">💪 Сегодня</span>
+                <span class="date-badge" id="todayDate"></span>
+            </div>
+
+            <div id="workoutExercises">
+                <div class="loading">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <button class="add-exercise-btn" onclick="openExerciseModal()">
+                <span>+</span> Добавить упражнение
+            </button>
+        </div>
+
+        <!-- Progress Tab -->
+        <div class="tab-content" id="progress-tab">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalWorkouts">0</div>
+                    <div class="stat-label">Тренировок</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalExercises">0</div>
+                    <div class="stat-label">Упражнений</div>
+                </div>
+            </div>
+
+            <div class="progress-card">
+                <div class="progress-header">
+                    <span class="progress-title">📈 Прогресс по упражнению</span>
+                </div>
+                <select class="progress-select" id="progressExerciseSelect" onchange="loadProgress()">
+                    <option value="">Выберите упражнение</option>
+                </select>
+                <div class="chart-container">
+                    <canvas id="progressChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div class="tab-content" id="history-tab">
+            <div class="section-header">
+                <span class="section-title">📅 История тренировок</span>
+            </div>
+            <div id="historyList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise Modal -->
+    <div class="modal-overlay" id="exerciseModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Добавить упражнение</span>
+                <button class="modal-close" onclick="closeExerciseModal()">×</button>
+            </div>
+            
+            <input type="text" class="search-input" id="exerciseSearch" placeholder="🔍 Поиск упражнения..." oninput="filterExercises()">
+            
+            <div class="categories-grid" id="categoriesGrid"></div>
+            
+            <div class="exercise-list" id="exerciseList"></div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Global state
+        let currentUser = null;
+        let currentWorkout = null;
+        let categories = [];
+        let exercises = [];
+        let selectedCategory = null;
+        let progressChart = null;
+
+        // Initialize Telegram WebApp
+        const tg = window.Telegram?.WebApp;
+        
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            
+            // Apply Telegram theme
+            if (tg.themeParams) {
+                document.documentElement.style.setProperty('--bg-primary', tg.themeParams.bg_color || '#0f0f14');
+                document.documentElement.style.setProperty('--bg-secondary', tg.themeParams.secondary_bg_color || '#1a1a24');
+            }
+        }
+
+        // API calls
+        const API_BASE = '/api';
+
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: { 'Content-Type': 'application/json' }
+            };
+            if (body) options.body = JSON.stringify(body);
+            
+            const response = await fetch(API_BASE + endpoint, options);
+            if (!response.ok) throw new Error('API Error');
+            
+            if (response.status === 204) return null;
+            return response.json();
+        }
+
+        // Initialize app
+        async function init() {
+            // Set today's date
+            const today = new Date();
+            document.getElementById('todayDate').textContent = today.toLocaleDateString('ru-RU', {
+                day: 'numeric',
+                month: 'long'
+            });
+
+            // Get user from Telegram
+            let userData = {
+                telegramId: Date.now(), // fallback for testing
+                firstName: 'Гость',
+                lastName: null,
+                username: null
+            };
+
+            if (tg?.initDataUnsafe?.user) {
+                userData = {
+                    telegramId: tg.initDataUnsafe.user.id,
+                    firstName: tg.initDataUnsafe.user.first_name,
+                    lastName: tg.initDataUnsafe.user.last_name,
+                    username: tg.initDataUnsafe.user.username
+                };
+            }
+
+            // Auth
+            try {
+                currentUser = await apiCall('/auth', 'POST', userData);
+                document.getElementById('greeting').textContent = `Привет, ${currentUser.firstName}!`;
+                document.getElementById('userAvatar').textContent = currentUser.firstName.charAt(0);
+            } catch (e) {
+                console.error('Auth failed:', e);
+            }
+
+            // Load data
+            await Promise.all([
+                loadCategories(),
+                loadExercises(),
+                loadTodayWorkout()
+            ]);
+
+            // Setup tabs
+            setupTabs();
+        }
+
+        function setupTabs() {
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.tab + '-tab').classList.add('active');
+                    
+                    if (tab.dataset.tab === 'history') loadHistory();
+                    if (tab.dataset.tab === 'progress') loadProgressTab();
+                });
+            });
+        }
+
+        async function loadCategories() {
+            try {
+                categories = await apiCall('/categories');
+                renderCategories();
+            } catch (e) {
+                console.error('Failed to load categories:', e);
+            }
+        }
+
+        async function loadExercises() {
+            try {
+                exercises = await apiCall('/exercises');
+                populateProgressSelect();
+            } catch (e) {
+                console.error('Failed to load exercises:', e);
+            }
+        }
+
+        async function loadTodayWorkout() {
+            if (!currentUser) return;
+            
+            try {
+                currentWorkout = await apiCall(`/workout/today/${currentUser.telegramId}`);
+                renderWorkout();
+            } catch (e) {
+                console.error('Failed to load workout:', e);
+                document.getElementById('workoutExercises').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💪</div>
+                        <div class="empty-state-title">Начни тренировку!</div>
+                        <div class="empty-state-text">Добавь первое упражнение</div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderCategories() {
+            const grid = document.getElementById('categoriesGrid');
+            grid.innerHTML = categories.map(cat => `
+                <div class="category-card ${selectedCategory === cat.id ? 'selected' : ''}" 
+                     onclick="selectCategory(${cat.id})" 
+                     style="--cat-color: ${cat.color}">
+                    <div class="category-icon">${cat.icon}</div>
+                    <div class="category-name">${cat.name}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectCategory(categoryId) {
+            selectedCategory = selectedCategory === categoryId ? null : categoryId;
+            renderCategories();
+            filterExercises();
+        }
+
+        function filterExercises() {
+            const search = document.getElementById('exerciseSearch').value.toLowerCase();
+            let filtered = exercises;
+            
+            if (selectedCategory) {
+                filtered = filtered.filter(e => e.categoryId === selectedCategory);
+            }
+            
+            if (search) {
+                filtered = filtered.filter(e => e.name.toLowerCase().includes(search));
+            }
+            
+            renderExerciseList(filtered);
+        }
+
+        function renderExerciseList(exerciseList) {
+            const list = document.getElementById('exerciseList');
+            
+            if (exerciseList.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <div class="empty-state-title">Ничего не найдено</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            list.innerHTML = exerciseList.map(ex => `
+                <div class="exercise-item" onclick="addExercise(${ex.id})">
+                    <span class="exercise-item-name">${ex.name}</span>
+                    <span class="exercise-item-add">+</span>
+                </div>
+            `).join('');
+        }
+
+        function renderWorkout() {
+            const container = document.getElementById('workoutExercises');
+            
+            if (!currentWorkout || currentWorkout.exercises.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💪</div>
+                        <div class="empty-state-title">Начни тренировку!</div>
+                        <div class="empty-state-text">Добавь первое упражнение</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = currentWorkout.exercises.map(we => `
+                <div class="workout-card">
+                    <div class="workout-card-header">
+                        <div class="exercise-info">
+                            <div class="exercise-icon" style="background: ${we.categoryColor}20; color: ${we.categoryColor}">
+                                ${getCategoryIcon(we.categoryName)}
+                            </div>
+                            <div>
+                                <div class="exercise-name">${we.exerciseName}</div>
+                                <div class="exercise-category">${we.categoryName}</div>
+                            </div>
+                        </div>
+                        <button class="delete-btn" onclick="deleteWorkoutExercise(${we.id})">🗑</button>
+                    </div>
+                    <div class="sets-container" id="sets-${we.id}">
+                        ${we.sets.map(s => renderSet(we.id, s)).join('')}
+                    </div>
+                    <button class="add-set-btn" onclick="addSet(${we.id})">+ Добавить подход</button>
+                </div>
+            `).join('');
+        }
+
+        function renderSet(workoutExerciseId, set) {
+            const setClass = set.isWarmup ? 'warmup' : (set.isToFailure ? 'failure' : '');
+            return `
+                <div class="set-row" id="set-row-${set.id}">
+                    <div class="set-number ${setClass}">${set.setNumber}</div>
+                    <input type="number" class="set-input" placeholder="Вес (кг)" 
+                           value="${set.weight || ''}" 
+                           onchange="updateSet(${set.id}, 'weight', this.value)">
+                    <input type="number" class="set-input" placeholder="Повторы" 
+                           value="${set.reps || ''}" 
+                           onchange="updateSet(${set.id}, 'reps', this.value)">
+                    <button class="set-delete" onclick="deleteSet(${set.id})">×</button>
+                </div>
+            `;
+        }
+
+        function getCategoryIcon(categoryName) {
+            const icons = {
+                'Спина': '🔙',
+                'Грудь': '💪',
+                'Бицепс': '💪',
+                'Трицепс': '💪',
+                'Ноги': '🦵',
+                'Плечи': '🏋️',
+                'Пресс': '🎯',
+                'Кардио': '🏃',
+                'Другое': '⚡'
+            };
+            return icons[categoryName] || '💪';
+        }
+
+        // Modal functions
+        function openExerciseModal() {
+            document.getElementById('exerciseModal').classList.add('active');
+            document.getElementById('exerciseSearch').value = '';
+            selectedCategory = null;
+            renderCategories();
+            renderExerciseList(exercises);
+        }
+
+        function closeExerciseModal() {
+            document.getElementById('exerciseModal').classList.remove('active');
+        }
+
+        // Exercise and Set functions
+        async function addExercise(exerciseId) {
+            closeExerciseModal();
+            
+            try {
+                await apiCall('/workout/exercise', 'POST', {
+                    workoutId: currentWorkout.id,
+                    exerciseId: exerciseId
+                });
+                await loadTodayWorkout();
+                showToast('Упражнение добавлено', 'success');
+            } catch (e) {
+                showToast('Ошибка', 'error');
+            }
+        }
+
+        async function addSet(workoutExerciseId) {
+            const we = currentWorkout.exercises.find(e => e.id === workoutExerciseId);
+            const nextSetNumber = (we?.sets?.length || 0) + 1;
+            
+            try {
+                await apiCall('/workout/set', 'POST', {
+                    workoutExerciseId: workoutExerciseId,
+                    setNumber: nextSetNumber
+                });
+                await loadTodayWorkout();
+            } catch (e) {
+                showToast('Ошибка', 'error');
+            }
+        }
+
+        async function updateSet(setId, field, value) {
+            const numValue = value ? parseFloat(value) : null;
+            
+            try {
+                await apiCall('/workout/set', 'PUT', {
+                    setId: setId,
+                    [field]: numValue
+                });
+            } catch (e) {
+                showToast('Ошибка сохранения', 'error');
+            }
+        }
+
+        async function deleteSet(setId) {
+            try {
+                await apiCall(`/workout/set/${setId}`, 'DELETE');
+                await loadTodayWorkout();
+            } catch (e) {
+                showToast('Ошибка', 'error');
+            }
+        }
+
+        async function deleteWorkoutExercise(workoutExerciseId) {
+            if (!confirm('Удалить упражнение?')) return;
+            
+            try {
+                await apiCall(`/workout/exercise/${workoutExerciseId}`, 'DELETE');
+                await loadTodayWorkout();
+                showToast('Упражнение удалено', 'success');
+            } catch (e) {
+                showToast('Ошибка', 'error');
+            }
+        }
+
+        // History
+        async function loadHistory() {
+            if (!currentUser) return;
+            
+            const container = document.getElementById('historyList');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+            
+            try {
+                const workouts = await apiCall(`/workouts/${currentUser.telegramId}`);
+                
+                if (workouts.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📅</div>
+                            <div class="empty-state-title">История пуста</div>
+                            <div class="empty-state-text">Твои тренировки появятся здесь</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = workouts.map(w => `
+                    <div class="history-item">
+                        <div class="history-date">
+                            📅 ${new Date(w.date).toLocaleDateString('ru-RU', {
+                                weekday: 'short',
+                                day: 'numeric',
+                                month: 'long'
+                            })}
+                        </div>
+                        <div class="history-exercises">
+                            ${w.exercises.map(e => `
+                                <span class="history-exercise-tag" style="border-left: 3px solid ${e.categoryColor}">
+                                    ${e.exerciseName}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('totalWorkouts').textContent = workouts.length;
+            } catch (e) {
+                console.error('Failed to load history:', e);
+            }
+        }
+
+        // Progress
+        function populateProgressSelect() {
+            const select = document.getElementById('progressExerciseSelect');
+            select.innerHTML = '<option value="">Выберите упражнение</option>' +
+                exercises.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+        }
+
+        async function loadProgressTab() {
+            document.getElementById('totalExercises').textContent = exercises.length;
+            loadHistory();
+        }
+
+        async function loadProgress() {
+            const select = document.getElementById('progressExerciseSelect');
+            const exerciseId = select.value;
+            
+            if (!exerciseId || !currentUser) return;
+            
+            try {
+                const progress = await apiCall(`/progress/${currentUser.telegramId}/${exerciseId}`);
+                renderProgressChart(progress);
+            } catch (e) {
+                console.error('Failed to load progress:', e);
+            }
+        }
+
+        function renderProgressChart(progress) {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            
+            if (progressChart) {
+                progressChart.destroy();
+            }
+            
+            if (!progress.data || progress.data.length === 0) {
+                return;
+            }
+            
+            const labels = progress.data.map(p => 
+                new Date(p.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+            );
+            
+            progressChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Макс. вес (кг)',
+                        data: progress.data.map(p => p.maxWeight),
+                        borderColor: '#7c3aed',
+                        backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#7c3aed'
+                    }, {
+                        label: 'Объем',
+                        data: progress.data.map(p => p.totalVolume),
+                        borderColor: '#ec4899',
+                        backgroundColor: 'transparent',
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#ec4899',
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: '#a0a0b0',
+                                font: { family: 'Nunito' }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: '#333344' },
+                            ticks: { color: '#a0a0b0' }
+                        },
+                        y: {
+                            grid: { color: '#333344' },
+                            ticks: { color: '#a0a0b0' }
+                        },
+                        y1: {
+                            position: 'right',
+                            grid: { display: false },
+                            ticks: { color: '#ec4899' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Toast
+        function showToast(message, type = '') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show ' + type;
+            setTimeout(() => toast.className = 'toast', 2000);
+        }
+
+        // Start app
+        init();
+    </script>
+</body>
+</html>
+
