@@ -192,13 +192,13 @@ class ApiController(
     @DeleteMapping("/workout/set/{setId}")
     fun deleteSet(@PathVariable setId: Long): ResponseEntity<Void> {
         workoutService.deleteSet(setId)
-        return ResponseEntity.ok().build()
+        return ResponseEntity.noContent().build()
     }
     
     @DeleteMapping("/workout/exercise/{workoutExerciseId}")
     fun deleteWorkoutExercise(@PathVariable workoutExerciseId: Long): ResponseEntity<Void> {
         workoutService.deleteWorkoutExercise(workoutExerciseId)
-        return ResponseEntity.ok().build()
+        return ResponseEntity.noContent().build()
     }
     
     @GetMapping("/workouts/{userId}")

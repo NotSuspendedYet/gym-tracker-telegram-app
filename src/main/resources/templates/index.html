@@ -218,11 +218,14 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex: 1;
+            min-width: 0;
         }
 
         .exercise-icon {
             width: 44px;
             height: 44px;
+            min-width: 44px;
             border-radius: var(--radius-md);
             display: flex;
             align-items: center;
@@ -234,6 +237,9 @@
             font-weight: 700;
             font-size: 15px;
             margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .exercise-category {
@@ -241,22 +247,52 @@
             color: var(--text-secondary);
         }
 
-        .delete-btn {
-            width: 32px;
-            height: 32px;
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .delete-btn, .confirm-btn, .edit-btn {
+            width: 36px;
+            height: 36px;
             border-radius: var(--radius-sm);
-            background: rgba(239, 68, 68, 0.1);
             border: none;
-            color: var(--danger);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
+            font-size: 16px;
+        }
+
+        .delete-btn {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
         }
 
         .delete-btn:hover {
             background: var(--danger);
+            color: white;
+        }
+
+        .confirm-btn {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+        }
+
+        .confirm-btn:hover {
+            background: var(--success);
+            color: white;
+        }
+
+        .edit-btn {
+            background: rgba(124, 58, 237, 0.1);
+            color: var(--accent-primary);
+        }
+
+        .edit-btn:hover {
+            background: var(--accent-primary);
             color: white;
         }
 
@@ -268,21 +304,22 @@
         }
 
         .set-row {
-            display: grid;
-            grid-template-columns: 40px 1fr 1fr 40px;
-            gap: 8px;
+            display: flex;
+            gap: 6px;
             align-items: center;
+            width: 100%;
         }
 
         .set-number {
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            min-width: 28px;
+            height: 28px;
             background: var(--bg-elevated);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             color: var(--text-secondary);
         }
@@ -298,10 +335,12 @@
         }
 
         .set-input {
+            flex: 1;
+            min-width: 0;
             background: var(--bg-elevated);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-sm);
-            padding: 10px 12px;
+            padding: 8px 10px;
             color: var(--text-primary);
             font-family: inherit;
             font-size: 14px;
@@ -319,11 +358,13 @@
         .set-input::placeholder {
             color: var(--text-muted);
             font-weight: 400;
+            font-size: 12px;
         }
 
         .set-delete {
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            min-width: 28px;
+            height: 28px;
             border-radius: var(--radius-sm);
             background: transparent;
             border: none;
@@ -333,6 +374,7 @@
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
+            font-size: 16px;
         }
 
         .set-delete:hover {
@@ -390,6 +432,12 @@
 
         .add-exercise-btn:active {
             transform: translateY(0);
+        }
+
+        .add-exercise-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
 
         /* Categories Grid */
@@ -545,13 +593,39 @@
         }
 
         /* History Section */
+        .history-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .history-control-btn {
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .history-control-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
         .history-item {
             background: var(--bg-card);
             border-radius: var(--radius-lg);
-            padding: 16px;
             margin-bottom: 12px;
             border: 1px solid var(--border-color);
-            cursor: pointer;
+            overflow: hidden;
             transition: all 0.2s ease;
         }
 
@@ -559,22 +633,120 @@
             border-color: var(--accent-primary);
         }
 
+        .history-header {
+            padding: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
         .history-date {
             font-size: 14px;
             font-weight: 700;
-            margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .history-exercises {
+        .history-summary {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .history-toggle {
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+            font-size: 18px;
+        }
+
+        .history-item.expanded .history-toggle {
+            transform: rotate(180deg);
+        }
+
+        .history-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .history-item.expanded .history-details {
+            max-height: 2000px;
+        }
+
+        .history-exercise {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .history-exercise-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .history-exercise-name {
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .history-exercise-category {
+            font-size: 11px;
+            color: var(--text-muted);
+            padding: 2px 6px;
+            background: var(--bg-elevated);
+            border-radius: 4px;
+        }
+
+        .history-exercise-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .history-action-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .history-action-btn.edit {
+            background: rgba(124, 58, 237, 0.1);
+            color: var(--accent-primary);
+        }
+
+        .history-action-btn.edit:hover {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .history-action-btn.delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .history-action-btn.delete:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .history-sets {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
         }
 
-        .history-exercise-tag {
+        .history-set {
             background: var(--bg-elevated);
             padding: 4px 10px;
             border-radius: var(--radius-sm);
@@ -746,6 +918,100 @@
             background: var(--danger);
         }
 
+        /* Confirm Dialog */
+        .confirm-dialog {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        }
+
+        .confirm-dialog.active {
+            display: flex;
+        }
+
+        .confirm-dialog-content {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            max-width: 320px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .confirm-dialog-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .confirm-dialog-text {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .confirm-dialog-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .confirm-dialog-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            border: none;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .confirm-dialog-btn.cancel {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .confirm-dialog-btn.confirm {
+            background: var(--danger);
+            color: white;
+        }
+
+        .confirm-dialog-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Modal for edit */
+        .edit-modal-content {
+            padding-bottom: 80px;
+        }
+
+        .modal-save-btn {
+            position: absolute;
+            bottom: 24px;
+            left: 24px;
+            right: 24px;
+            padding: 16px;
+            border: none;
+            border-radius: var(--radius-md);
+            background: var(--accent-gradient);
+            color: white;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-save-btn:hover {
+            opacity: 0.9;
+        }
+
         /* Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
@@ -794,12 +1060,14 @@
             </div>
 
             <div id="workoutExercises">
-                <div class="loading">
-                    <div class="spinner"></div>
+                <div class="empty-state">
+                    <div class="empty-state-icon">💪</div>
+                    <div class="empty-state-title">Начни тренировку!</div>
+                    <div class="empty-state-text">Добавь первое упражнение</div>
                 </div>
             </div>
 
-            <button class="add-exercise-btn" onclick="openExerciseModal()">
+            <button class="add-exercise-btn" id="addExerciseBtn" onclick="openExerciseModal()">
                 <span>+</span> Добавить упражнение
             </button>
         </div>
@@ -835,6 +1103,14 @@
             <div class="section-header">
                 <span class="section-title">📅 История тренировок</span>
             </div>
+            <div class="history-controls">
+                <button class="history-control-btn" onclick="expandAllHistory()">
+                    <span>⬇️</span> Раскрыть всё
+                </button>
+                <button class="history-control-btn" onclick="collapseAllHistory()">
+                    <span>⬆️</span> Свернуть всё
+                </button>
+            </div>
             <div id="historyList">
                 <div class="loading">
                     <div class="spinner"></div>
@@ -847,7 +1123,7 @@
     <div class="modal-overlay" id="exerciseModal">
         <div class="modal">
             <div class="modal-header">
-                <span class="modal-title">Добавить упражнение</span>
+                <span class="modal-title">Выбери упражнение</span>
                 <button class="modal-close" onclick="closeExerciseModal()">×</button>
             </div>
             
@@ -856,6 +1132,34 @@
             <div class="categories-grid" id="categoriesGrid"></div>
             
             <div class="exercise-list" id="exerciseList"></div>
+        </div>
+    </div>
+
+    <!-- Edit Exercise Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal" style="position: relative;">
+            <div class="modal-header">
+                <span class="modal-title" id="editModalTitle">Редактировать упражнение</span>
+                <button class="modal-close" onclick="closeEditModal()">×</button>
+            </div>
+            
+            <div class="edit-modal-content" id="editModalContent">
+                <!-- Content will be rendered here -->
+            </div>
+            
+            <button class="modal-save-btn" onclick="saveEditedExercise()">💾 Сохранить</button>
+        </div>
+    </div>
+
+    <!-- Confirm Dialog -->
+    <div class="confirm-dialog" id="confirmDialog">
+        <div class="confirm-dialog-content">
+            <div class="confirm-dialog-title" id="confirmTitle">Подтверждение</div>
+            <div class="confirm-dialog-text" id="confirmText">Вы уверены?</div>
+            <div class="confirm-dialog-buttons">
+                <button class="confirm-dialog-btn cancel" onclick="closeConfirmDialog()">Отмена</button>
+                <button class="confirm-dialog-btn confirm" id="confirmBtn" onclick="confirmAction()">Удалить</button>
+            </div>
         </div>
     </div>
 
@@ -870,6 +1174,17 @@
         let exercises = [];
         let selectedCategory = null;
         let progressChart = null;
+        
+        // Pending exercise state (for workout tab)
+        let pendingExercise = null;
+        let pendingSets = [];
+        
+        // Edit state
+        let editingWorkoutExerciseId = null;
+        let editingSets = [];
+        
+        // Confirm dialog state
+        let confirmCallback = null;
 
         // Initialize Telegram WebApp
         const tg = window.Telegram?.WebApp;
@@ -899,7 +1214,10 @@
             if (!response.ok) throw new Error('API Error');
             
             if (response.status === 204) return null;
-            return response.json();
+            
+            const text = await response.text();
+            if (!text) return null;
+            return JSON.parse(text);
         }
 
         // Initialize app
@@ -986,17 +1304,11 @@
             
             try {
                 currentWorkout = await apiCall(`/workout/today/${currentUser.telegramId}`);
-                renderWorkout();
             } catch (e) {
                 console.error('Failed to load workout:', e);
-                document.getElementById('workoutExercises').innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">💪</div>
-                        <div class="empty-state-title">Начни тренировку!</div>
-                        <div class="empty-state-text">Добавь первое упражнение</div>
-                    </div>
-                `;
             }
+            
+            renderWorkoutTab();
         }
 
         function renderCategories() {
@@ -1046,61 +1358,77 @@
             }
             
             list.innerHTML = exerciseList.map(ex => `
-                <div class="exercise-item" onclick="addExercise(${ex.id})">
+                <div class="exercise-item" onclick="selectExercise(${ex.id})">
                     <span class="exercise-item-name">${ex.name}</span>
                     <span class="exercise-item-add">+</span>
                 </div>
             `).join('');
         }
 
-        function renderWorkout() {
+        function renderWorkoutTab() {
             const container = document.getElementById('workoutExercises');
+            const addBtn = document.getElementById('addExerciseBtn');
             
-            if (!currentWorkout || currentWorkout.exercises.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">💪</div>
-                        <div class="empty-state-title">Начни тренировку!</div>
-                        <div class="empty-state-text">Добавь первое упражнение</div>
-                    </div>
-                `;
+            // If there's a pending exercise being added
+            if (pendingExercise) {
+                addBtn.disabled = true;
+                container.innerHTML = renderPendingExercise();
                 return;
             }
             
-            container.innerHTML = currentWorkout.exercises.map(we => `
+            addBtn.disabled = false;
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">💪</div>
+                    <div class="empty-state-title">Начни тренировку!</div>
+                    <div class="empty-state-text">Добавь первое упражнение</div>
+                </div>
+            `;
+        }
+
+        function renderPendingExercise() {
+            const category = categories.find(c => c.id === pendingExercise.categoryId);
+            const categoryIcon = getCategoryIcon(category?.name);
+            const categoryColor = category?.color || '#6366f1';
+            
+            return `
                 <div class="workout-card">
                     <div class="workout-card-header">
                         <div class="exercise-info">
-                            <div class="exercise-icon" style="background: ${we.categoryColor}20; color: ${we.categoryColor}">
-                                ${getCategoryIcon(we.categoryName)}
+                            <div class="exercise-icon" style="background: ${categoryColor}20; color: ${categoryColor}">
+                                ${categoryIcon}
                             </div>
                             <div>
-                                <div class="exercise-name">${we.exerciseName}</div>
-                                <div class="exercise-category">${we.categoryName}</div>
+                                <div class="exercise-name">${pendingExercise.name}</div>
+                                <div class="exercise-category">${category?.name || ''}</div>
                             </div>
                         </div>
-                        <button class="delete-btn" onclick="deleteWorkoutExercise(${we.id})">🗑</button>
+                        <div class="card-actions">
+                            <button class="delete-btn" onclick="cancelPendingExercise()" title="Отменить">🗑</button>
+                            <button class="confirm-btn" onclick="confirmPendingExercise()" title="Сохранить">✓</button>
+                        </div>
                     </div>
-                    <div class="sets-container" id="sets-${we.id}">
-                        ${we.sets.map(s => renderSet(we.id, s)).join('')}
+                    <div class="sets-container" id="pending-sets">
+                        ${pendingSets.map((s, idx) => renderPendingSet(idx, s)).join('')}
                     </div>
-                    <button class="add-set-btn" onclick="addSet(${we.id})">+ Добавить подход</button>
+                    <button class="add-set-btn" onclick="addPendingSet()">+ Добавить подход</button>
                 </div>
-            `).join('');
+            `;
         }
 
-        function renderSet(workoutExerciseId, set) {
-            const setClass = set.isWarmup ? 'warmup' : (set.isToFailure ? 'failure' : '');
+        function renderPendingSet(index, set) {
             return `
-                <div class="set-row" id="set-row-${set.id}">
-                    <div class="set-number ${setClass}">${set.setNumber}</div>
-                    <input type="number" class="set-input" placeholder="Вес (кг)" 
+                <div class="set-row" id="pending-set-${index}">
+                    <div class="set-number">${index + 1}</div>
+                    <input type="number" class="set-input" placeholder="Вес" 
                            value="${set.weight || ''}" 
-                           onchange="updateSet(${set.id}, 'weight', this.value)">
-                    <input type="number" class="set-input" placeholder="Повторы" 
+                           oninput="updatePendingSet(${index}, 'weight', this.value)"
+                           inputmode="decimal">
+                    <input type="number" class="set-input" placeholder="Повт." 
                            value="${set.reps || ''}" 
-                           onchange="updateSet(${set.id}, 'reps', this.value)">
-                    <button class="set-delete" onclick="deleteSet(${set.id})">×</button>
+                           oninput="updatePendingSet(${index}, 'reps', this.value)"
+                           inputmode="numeric">
+                    <button class="set-delete" onclick="deletePendingSet(${index})">×</button>
                 </div>
             `;
         }
@@ -1133,68 +1461,86 @@
             document.getElementById('exerciseModal').classList.remove('active');
         }
 
-        // Exercise and Set functions
-        async function addExercise(exerciseId) {
+        // Pending exercise functions
+        function selectExercise(exerciseId) {
+            const exercise = exercises.find(e => e.id === exerciseId);
+            if (!exercise) return;
+            
             closeExerciseModal();
             
+            pendingExercise = exercise;
+            pendingSets = [{ weight: null, reps: null }]; // Start with one empty set
+            
+            renderWorkoutTab();
+        }
+
+        function addPendingSet() {
+            pendingSets.push({ weight: null, reps: null });
+            renderWorkoutTab();
+        }
+
+        function updatePendingSet(index, field, value) {
+            if (pendingSets[index]) {
+                pendingSets[index][field] = value ? parseFloat(value) : null;
+            }
+        }
+
+        function deletePendingSet(index) {
+            if (pendingSets.length <= 1) {
+                showToast('Нужен минимум один подход', 'error');
+                return;
+            }
+            pendingSets.splice(index, 1);
+            renderWorkoutTab();
+        }
+
+        function cancelPendingExercise() {
+            showConfirmDialog('Отменить добавление?', 'Все введённые данные будут потеряны', () => {
+                pendingExercise = null;
+                pendingSets = [];
+                renderWorkoutTab();
+            });
+        }
+
+        async function confirmPendingExercise() {
+            // Validate that at least one set has data
+            const validSets = pendingSets.filter(s => s.weight || s.reps);
+            if (validSets.length === 0) {
+                showToast('Заполните хотя бы один подход', 'error');
+                return;
+            }
+            
             try {
-                await apiCall('/workout/exercise', 'POST', {
+                // Add exercise to workout
+                const workoutExercise = await apiCall('/workout/exercise', 'POST', {
                     workoutId: currentWorkout.id,
-                    exerciseId: exerciseId
+                    exerciseId: pendingExercise.id
                 });
+                
+                // Add all sets
+                for (let i = 0; i < pendingSets.length; i++) {
+                    const set = pendingSets[i];
+                    if (set.weight || set.reps) {
+                        await apiCall('/workout/set', 'POST', {
+                            workoutExerciseId: workoutExercise.id,
+                            setNumber: i + 1,
+                            weight: set.weight,
+                            reps: set.reps ? parseInt(set.reps) : null
+                        });
+                    }
+                }
+                
+                // Clear pending state
+                pendingExercise = null;
+                pendingSets = [];
+                
+                // Refresh workout data
                 await loadTodayWorkout();
-                showToast('Упражнение добавлено', 'success');
+                
+                showToast('Упражнение добавлено! ✓', 'success');
             } catch (e) {
-                showToast('Ошибка', 'error');
-            }
-        }
-
-        async function addSet(workoutExerciseId) {
-            const we = currentWorkout.exercises.find(e => e.id === workoutExerciseId);
-            const nextSetNumber = (we?.sets?.length || 0) + 1;
-            
-            try {
-                await apiCall('/workout/set', 'POST', {
-                    workoutExerciseId: workoutExerciseId,
-                    setNumber: nextSetNumber
-                });
-                await loadTodayWorkout();
-            } catch (e) {
-                showToast('Ошибка', 'error');
-            }
-        }
-
-        async function updateSet(setId, field, value) {
-            const numValue = value ? parseFloat(value) : null;
-            
-            try {
-                await apiCall('/workout/set', 'PUT', {
-                    setId: setId,
-                    [field]: numValue
-                });
-            } catch (e) {
+                console.error('Failed to save exercise:', e);
                 showToast('Ошибка сохранения', 'error');
-            }
-        }
-
-        async function deleteSet(setId) {
-            try {
-                await apiCall(`/workout/set/${setId}`, 'DELETE');
-                await loadTodayWorkout();
-            } catch (e) {
-                showToast('Ошибка', 'error');
-            }
-        }
-
-        async function deleteWorkoutExercise(workoutExerciseId) {
-            if (!confirm('Удалить упражнение?')) return;
-            
-            try {
-                await apiCall(`/workout/exercise/${workoutExerciseId}`, 'DELETE');
-                await loadTodayWorkout();
-                showToast('Упражнение удалено', 'success');
-            } catch (e) {
-                showToast('Ошибка', 'error');
             }
         }
 
@@ -1219,29 +1565,237 @@
                     return;
                 }
                 
-                container.innerHTML = workouts.map(w => `
-                    <div class="history-item">
-                        <div class="history-date">
-                            📅 ${new Date(w.date).toLocaleDateString('ru-RU', {
-                                weekday: 'short',
-                                day: 'numeric',
-                                month: 'long'
-                            })}
-                        </div>
-                        <div class="history-exercises">
-                            ${w.exercises.map(e => `
-                                <span class="history-exercise-tag" style="border-left: 3px solid ${e.categoryColor}">
-                                    ${e.exerciseName}
-                                </span>
-                            `).join('')}
-                        </div>
-                    </div>
-                `).join('');
+                container.innerHTML = workouts.map(w => renderHistoryItem(w)).join('');
                 
                 document.getElementById('totalWorkouts').textContent = workouts.length;
             } catch (e) {
                 console.error('Failed to load history:', e);
             }
+        }
+
+        function renderHistoryItem(workout) {
+            const exerciseCount = workout.exercises.length;
+            const totalSets = workout.exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
+            
+            return `
+                <div class="history-item" id="history-${workout.id}">
+                    <div class="history-header" onclick="toggleHistoryItem(${workout.id})">
+                        <div>
+                            <div class="history-date">
+                                📅 ${new Date(workout.date).toLocaleDateString('ru-RU', {
+                                    weekday: 'short',
+                                    day: 'numeric',
+                                    month: 'long'
+                                })}
+                            </div>
+                            <div class="history-summary">${exerciseCount} упр. • ${totalSets} подх.</div>
+                        </div>
+                        <span class="history-toggle">▼</span>
+                    </div>
+                    <div class="history-details">
+                        ${workout.exercises.map(ex => renderHistoryExercise(ex)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderHistoryExercise(exercise) {
+            return `
+                <div class="history-exercise">
+                    <div class="history-exercise-header">
+                        <div class="history-exercise-name">
+                            ${exercise.exerciseName}
+                            <span class="history-exercise-category">${exercise.categoryName}</span>
+                        </div>
+                        <div class="history-exercise-actions">
+                            <button class="history-action-btn edit" onclick="openEditModal(${exercise.id})" title="Редактировать">✏️</button>
+                            <button class="history-action-btn delete" onclick="deleteWorkoutExercise(${exercise.id})" title="Удалить">🗑</button>
+                        </div>
+                    </div>
+                    <div class="history-sets">
+                        ${exercise.sets.map(s => `
+                            <span class="history-set">${s.setNumber}: ${s.weight || '-'}кг × ${s.reps || '-'}</span>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleHistoryItem(workoutId) {
+            const item = document.getElementById(`history-${workoutId}`);
+            if (item) {
+                item.classList.toggle('expanded');
+            }
+        }
+
+        function expandAllHistory() {
+            document.querySelectorAll('.history-item').forEach(item => {
+                item.classList.add('expanded');
+            });
+        }
+
+        function collapseAllHistory() {
+            document.querySelectorAll('.history-item').forEach(item => {
+                item.classList.remove('expanded');
+            });
+        }
+
+        // Edit Exercise Modal
+        async function openEditModal(workoutExerciseId) {
+            editingWorkoutExerciseId = workoutExerciseId;
+            
+            // Find the exercise data from loaded history
+            let exerciseData = null;
+            const historyWorkouts = await apiCall(`/workouts/${currentUser.telegramId}`);
+            
+            for (const w of historyWorkouts) {
+                const found = w.exercises.find(e => e.id === workoutExerciseId);
+                if (found) {
+                    exerciseData = found;
+                    break;
+                }
+            }
+            
+            if (!exerciseData) {
+                showToast('Упражнение не найдено', 'error');
+                return;
+            }
+            
+            editingSets = exerciseData.sets.map(s => ({
+                id: s.id,
+                setNumber: s.setNumber,
+                weight: s.weight,
+                reps: s.reps
+            }));
+            
+            document.getElementById('editModalTitle').textContent = exerciseData.exerciseName;
+            renderEditModalContent();
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function renderEditModalContent() {
+            const content = document.getElementById('editModalContent');
+            content.innerHTML = `
+                <div class="sets-container">
+                    ${editingSets.map((s, idx) => renderEditSet(idx, s)).join('')}
+                </div>
+                <button class="add-set-btn" onclick="addEditSet()" style="margin-top: 12px;">+ Добавить подход</button>
+            `;
+        }
+
+        function renderEditSet(index, set) {
+            return `
+                <div class="set-row">
+                    <div class="set-number">${index + 1}</div>
+                    <input type="number" class="set-input" placeholder="Вес" 
+                           value="${set.weight || ''}" 
+                           oninput="updateEditSet(${index}, 'weight', this.value)"
+                           inputmode="decimal">
+                    <input type="number" class="set-input" placeholder="Повт." 
+                           value="${set.reps || ''}" 
+                           oninput="updateEditSet(${index}, 'reps', this.value)"
+                           inputmode="numeric">
+                    <button class="set-delete" onclick="deleteEditSet(${index})">×</button>
+                </div>
+            `;
+        }
+
+        function addEditSet() {
+            editingSets.push({ id: null, setNumber: editingSets.length + 1, weight: null, reps: null });
+            renderEditModalContent();
+        }
+
+        function updateEditSet(index, field, value) {
+            if (editingSets[index]) {
+                editingSets[index][field] = value ? parseFloat(value) : null;
+            }
+        }
+
+        function deleteEditSet(index) {
+            if (editingSets.length <= 1) {
+                showToast('Нужен минимум один подход', 'error');
+                return;
+            }
+            editingSets.splice(index, 1);
+            // Renumber sets
+            editingSets.forEach((s, i) => s.setNumber = i + 1);
+            renderEditModalContent();
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+            editingWorkoutExerciseId = null;
+            editingSets = [];
+        }
+
+        async function saveEditedExercise() {
+            if (!editingWorkoutExerciseId) return;
+            
+            try {
+                // Get existing sets
+                const existingSets = editingSets.filter(s => s.id);
+                const newSets = editingSets.filter(s => !s.id);
+                
+                // Update existing sets
+                for (const set of existingSets) {
+                    await apiCall('/workout/set', 'PUT', {
+                        setId: set.id,
+                        weight: set.weight,
+                        reps: set.reps ? parseInt(set.reps) : null
+                    });
+                }
+                
+                // Add new sets
+                for (const set of newSets) {
+                    await apiCall('/workout/set', 'POST', {
+                        workoutExerciseId: editingWorkoutExerciseId,
+                        setNumber: set.setNumber,
+                        weight: set.weight,
+                        reps: set.reps ? parseInt(set.reps) : null
+                    });
+                }
+                
+                closeEditModal();
+                await loadHistory();
+                showToast('Изменения сохранены ✓', 'success');
+            } catch (e) {
+                console.error('Failed to save:', e);
+                showToast('Ошибка сохранения', 'error');
+            }
+        }
+
+        // Delete workout exercise
+        function deleteWorkoutExercise(workoutExerciseId) {
+            showConfirmDialog('Удалить упражнение?', 'Это действие нельзя отменить', async () => {
+                try {
+                    await apiCall(`/workout/exercise/${workoutExerciseId}`, 'DELETE');
+                    await loadHistory();
+                    showToast('Упражнение удалено', 'success');
+                } catch (e) {
+                    console.error('Failed to delete:', e);
+                    showToast('Ошибка удаления', 'error');
+                }
+            });
+        }
+
+        // Confirm dialog
+        function showConfirmDialog(title, text, callback) {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmText').textContent = text;
+            confirmCallback = callback;
+            document.getElementById('confirmDialog').classList.add('active');
+        }
+
+        function closeConfirmDialog() {
+            document.getElementById('confirmDialog').classList.remove('active');
+            confirmCallback = null;
+        }
+
+        function confirmAction() {
+            if (confirmCallback) {
+                confirmCallback();
+            }
+            closeConfirmDialog();
         }
 
         // Progress
@@ -1346,7 +1900,7 @@
             const toast = document.getElementById('toast');
             toast.textContent = message;
             toast.className = 'toast show ' + type;
-            setTimeout(() => toast.className = 'toast', 2000);
+            setTimeout(() => toast.className = 'toast', 2500);
         }
 
         // Start app
@@ -1354,4 +1908,3 @@
     </script>
 </body>
 </html>
-
