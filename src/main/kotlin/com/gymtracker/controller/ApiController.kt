@@ -22,10 +22,20 @@ data class AddExerciseRequest(
 data class AddSetRequest(
     val workoutExerciseId: Long,
     val setNumber: Int,
+    // Силовые
     val weight: Double? = null,
     val reps: Int? = null,
+    // Статика/Кардио
     val duration: Int? = null,
     val distance: Double? = null,
+    // Плавание
+    val style: String? = null,
+    // Интервалы
+    val workTime: Int? = null,
+    val restTime: Int? = null,
+    // Кардио с уровнем
+    val intensity: Int? = null,
+    // Метаданные
     val isWarmup: Boolean = false,
     val isToFailure: Boolean = false,
     val notes: String? = null
@@ -33,10 +43,20 @@ data class AddSetRequest(
 
 data class UpdateSetRequest(
     val setId: Long,
+    // Силовые
     val weight: Double? = null,
     val reps: Int? = null,
+    // Статика/Кардио
     val duration: Int? = null,
     val distance: Double? = null,
+    // Плавание
+    val style: String? = null,
+    // Интервалы
+    val workTime: Int? = null,
+    val restTime: Int? = null,
+    // Кардио с уровнем
+    val intensity: Int? = null,
+    // Метаданные
     val isWarmup: Boolean = false,
     val isToFailure: Boolean = false,
     val notes: String? = null
@@ -45,7 +65,8 @@ data class UpdateSetRequest(
 data class CreateExerciseRequest(
     val name: String,
     val categoryId: Long,
-    val userId: Long
+    val userId: Long,
+    val exerciseType: String = "STRENGTH"  // По умолчанию силовое
 )
 
 data class CategoryDto(
@@ -59,7 +80,8 @@ data class ExerciseDto(
     val id: Long,
     val name: String,
     val categoryId: Long,
-    val categoryName: String
+    val categoryName: String,
+    val exerciseType: String  // STRENGTH, BODYWEIGHT, STATIC, etc.
 )
 
 data class WorkoutDto(
@@ -74,16 +96,27 @@ data class WorkoutExerciseDto(
     val exerciseName: String,
     val categoryName: String,
     val categoryColor: String,
+    val exerciseType: String,  // STRENGTH, BODYWEIGHT, STATIC, etc.
     val sets: List<SetDto>
 )
 
 data class SetDto(
     val id: Long,
     val setNumber: Int,
+    // Силовые
     val weight: Double?,
     val reps: Int?,
+    // Статика/Кардио
     val duration: Int?,
     val distance: Double?,
+    // Плавание
+    val style: String?,
+    // Интервалы
+    val workTime: Int?,
+    val restTime: Int?,
+    // Кардио с уровнем
+    val intensity: Int?,
+    // Метаданные
     val isWarmup: Boolean,
     val isToFailure: Boolean,
     val notes: String?
@@ -126,7 +159,13 @@ class ApiController(
     @GetMapping("/exercises")
     fun getAllExercises(): ResponseEntity<List<ExerciseDto>> {
         val exercises = workoutService.getAllExercises().map {
-            ExerciseDto(it.id, it.name, it.category.id, it.category.name)
+            ExerciseDto(
+                it.id, 
+                it.name, 
+                it.category.id, 
+                it.category.name, 
+                it.exerciseType?.name ?: "STRENGTH"  // Default to STRENGTH if null
+            )
         }
         return ResponseEntity.ok(exercises)
     }
@@ -134,7 +173,13 @@ class ApiController(
     @GetMapping("/exercises/category/{categoryId}")
     fun getExercisesByCategory(@PathVariable categoryId: Long): ResponseEntity<List<ExerciseDto>> {
         val exercises = workoutService.getExercisesByCategory(categoryId).map {
-            ExerciseDto(it.id, it.name, it.category.id, it.category.name)
+            ExerciseDto(
+                it.id, 
+                it.name, 
+                it.category.id, 
+                it.category.name, 
+                it.exerciseType?.name ?: "STRENGTH"  // Default to STRENGTH if null
+            )
         }
         return ResponseEntity.ok(exercises)
     }
@@ -163,6 +208,10 @@ class ApiController(
                 reps = request.reps,
                 duration = request.duration,
                 distance = request.distance,
+                style = request.style,
+                workTime = request.workTime,
+                restTime = request.restTime,
+                intensity = request.intensity,
                 isWarmup = request.isWarmup,
                 isToFailure = request.isToFailure,
                 notes = request.notes
@@ -181,6 +230,10 @@ class ApiController(
                 reps = request.reps,
                 duration = request.duration,
                 distance = request.distance,
+                style = request.style,
+                workTime = request.workTime,
+                restTime = request.restTime,
+                intensity = request.intensity,
                 isWarmup = request.isWarmup,
                 isToFailure = request.isToFailure,
                 notes = request.notes
@@ -226,16 +279,24 @@ class ApiController(
     
     @PostMapping("/exercises")
     fun createCustomExercise(@RequestBody request: CreateExerciseRequest): ResponseEntity<ExerciseDto> {
+        val exerciseType = try {
+            ExerciseType.valueOf(request.exerciseType)
+        } catch (e: IllegalArgumentException) {
+            ExerciseType.STRENGTH
+        }
+        
         val exercise = workoutService.createCustomExercise(
             request.name, 
             request.categoryId, 
-            request.userId
+            request.userId,
+            exerciseType
         )
         return ResponseEntity.ok(ExerciseDto(
             exercise.id, 
             exercise.name, 
             exercise.category.id, 
-            exercise.category.name
+            exercise.category.name,
+            exercise.exerciseType?.name ?: "STRENGTH"  // Default to STRENGTH if null
         ))
     }
     
@@ -256,6 +317,7 @@ class ApiController(
             exerciseName = we.exercise.name,
             categoryName = we.exercise.category.name,
             categoryColor = we.exercise.category.color,
+            exerciseType = we.exercise.exerciseType?.name ?: "STRENGTH",  // Default to STRENGTH if null
             sets = sets
         )
     }
@@ -268,6 +330,10 @@ class ApiController(
             reps = set.reps,
             duration = set.duration,
             distance = set.distance,
+            style = set.style?.name,
+            workTime = set.workTime,
+            restTime = set.restTime,
+            intensity = set.intensity,
             isWarmup = set.isWarmup,
             isToFailure = set.isToFailure,
             notes = set.notes

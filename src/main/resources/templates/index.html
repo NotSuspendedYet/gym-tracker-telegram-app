@@ -507,6 +507,17 @@
             font-weight: 600;
             font-size: 14px;
         }
+        
+        .exercise-type-badge {
+            display: inline-block;
+            font-size: 10px;
+            color: var(--text-muted);
+            background: var(--bg-elevated);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+            font-weight: 500;
+        }
 
         .exercise-item-add {
             width: 28px;
@@ -1181,10 +1192,142 @@
         
         // Edit state
         let editingWorkoutExerciseId = null;
+        let editingExerciseType = null;
         let editingSets = [];
         
         // Confirm dialog state
         let confirmCallback = null;
+        
+        // Exercise type configuration - defines which fields are shown for each type
+        const EXERCISE_TYPE_CONFIG = {
+            STRENGTH: {
+                label: 'Силовое',
+                fields: [
+                    { name: 'weight', label: 'Вес', unit: 'кг', type: 'decimal', placeholder: 'Вес' },
+                    { name: 'reps', label: 'Повт.', unit: '', type: 'integer', placeholder: 'Повт.' }
+                ],
+                defaultSet: { weight: null, reps: null }
+            },
+            BODYWEIGHT: {
+                label: 'Своё тело',
+                fields: [
+                    { name: 'reps', label: 'Повторения', unit: '', type: 'integer', placeholder: 'Повторения' }
+                ],
+                defaultSet: { reps: null }
+            },
+            WEIGHTED_BODYWEIGHT: {
+                label: 'С отягощением',
+                fields: [
+                    { name: 'weight', label: 'Доп. вес', unit: 'кг', type: 'decimal', placeholder: 'Доп. вес' },
+                    { name: 'reps', label: 'Повт.', unit: '', type: 'integer', placeholder: 'Повт.' }
+                ],
+                defaultSet: { weight: null, reps: null }
+            },
+            STATIC: {
+                label: 'Статика',
+                fields: [
+                    { name: 'duration', label: 'Время', unit: 'сек', type: 'duration', placeholder: 'Секунды' }
+                ],
+                defaultSet: { duration: null }
+            },
+            CARDIO_DISTANCE: {
+                label: 'Кардио',
+                fields: [
+                    { name: 'distance', label: 'Дистанция', unit: 'м', type: 'integer', placeholder: 'Метры' },
+                    { name: 'duration', label: 'Время', unit: 'сек', type: 'duration', placeholder: 'Секунды' }
+                ],
+                defaultSet: { distance: null, duration: null }
+            },
+            CARDIO_TIME: {
+                label: 'Кардио',
+                fields: [
+                    { name: 'duration', label: 'Время', unit: 'мин', type: 'duration', placeholder: 'Минуты' },
+                    { name: 'intensity', label: 'Уровень', unit: '', type: 'integer', placeholder: '1-10' }
+                ],
+                defaultSet: { duration: null, intensity: null }
+            },
+            SWIMMING: {
+                label: 'Плавание',
+                fields: [
+                    { name: 'distance', label: 'Дистанция', unit: 'м', type: 'integer', placeholder: 'Метры' },
+                    { name: 'duration', label: 'Время', unit: 'сек', type: 'duration', placeholder: 'Секунды' },
+                    { name: 'style', label: 'Стиль', unit: '', type: 'select', options: [
+                        { value: 'FREESTYLE', label: 'Кроль' },
+                        { value: 'BREASTSTROKE', label: 'Брасс' },
+                        { value: 'BACKSTROKE', label: 'На спине' },
+                        { value: 'BUTTERFLY', label: 'Баттерфляй' },
+                        { value: 'MEDLEY', label: 'Комплекс' }
+                    ]}
+                ],
+                defaultSet: { distance: null, duration: null, style: null }
+            },
+            INTERVALS: {
+                label: 'Интервалы',
+                fields: [
+                    { name: 'workTime', label: 'Работа', unit: 'сек', type: 'integer', placeholder: 'Работа' },
+                    { name: 'restTime', label: 'Отдых', unit: 'сек', type: 'integer', placeholder: 'Отдых' },
+                    { name: 'reps', label: 'Раунды', unit: '', type: 'integer', placeholder: 'Раунды' }
+                ],
+                defaultSet: { workTime: null, restTime: null, reps: null }
+            }
+        };
+        
+        // Style labels for display
+        const SWIMMING_STYLE_LABELS = {
+            FREESTYLE: 'Кроль',
+            BREASTSTROKE: 'Брасс',
+            BACKSTROKE: 'На спине',
+            BUTTERFLY: 'Баттерфляй',
+            MEDLEY: 'Комплекс'
+        };
+        
+        // Helper function to get exercise type config
+        function getExerciseTypeConfig(exerciseType) {
+            return EXERCISE_TYPE_CONFIG[exerciseType] || EXERCISE_TYPE_CONFIG.STRENGTH;
+        }
+        
+        // Helper function to format set display based on type
+        function formatSetDisplay(set, exerciseType) {
+            const config = getExerciseTypeConfig(exerciseType);
+            
+            switch (exerciseType) {
+                case 'STRENGTH':
+                case 'WEIGHTED_BODYWEIGHT':
+                    return `${set.weight || '-'}кг × ${set.reps || '-'}`;
+                case 'BODYWEIGHT':
+                    return `${set.reps || '-'} повт.`;
+                case 'STATIC':
+                    return formatDuration(set.duration);
+                case 'CARDIO_DISTANCE':
+                    return `${formatDistance(set.distance)} / ${formatDuration(set.duration)}`;
+                case 'CARDIO_TIME':
+                    const level = set.intensity ? ` (ур. ${set.intensity})` : '';
+                    return `${formatDuration(set.duration)}${level}`;
+                case 'SWIMMING':
+                    const style = set.style ? SWIMMING_STYLE_LABELS[set.style] || set.style : '';
+                    return `${set.distance || '-'}м / ${formatDuration(set.duration)}${style ? ' ' + style : ''}`;
+                case 'INTERVALS':
+                    return `${set.workTime || '-'}с/${set.restTime || '-'}с × ${set.reps || '-'}р`;
+                default:
+                    return `${set.weight || '-'}кг × ${set.reps || '-'}`;
+            }
+        }
+        
+        // Format duration (seconds to readable format)
+        function formatDuration(seconds) {
+            if (!seconds) return '-';
+            if (seconds < 60) return `${seconds}с`;
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return secs > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${mins} мин`;
+        }
+        
+        // Format distance
+        function formatDistance(meters) {
+            if (!meters) return '-';
+            if (meters >= 1000) return `${(meters / 1000).toFixed(1)}км`;
+            return `${meters}м`;
+        }
 
         // Initialize Telegram WebApp
         const tg = window.Telegram?.WebApp;
@@ -1357,12 +1500,18 @@
                 return;
             }
             
-            list.innerHTML = exerciseList.map(ex => `
-                <div class="exercise-item" onclick="selectExercise(${ex.id})">
-                    <span class="exercise-item-name">${ex.name}</span>
-                    <span class="exercise-item-add">+</span>
-                </div>
-            `).join('');
+            list.innerHTML = exerciseList.map(ex => {
+                const typeConfig = getExerciseTypeConfig(ex.exerciseType || 'STRENGTH');
+                return `
+                    <div class="exercise-item" onclick="selectExercise(${ex.id})">
+                        <div>
+                            <span class="exercise-item-name">${ex.name}</span>
+                            <span class="exercise-type-badge">${typeConfig.label}</span>
+                        </div>
+                        <span class="exercise-item-add">+</span>
+                    </div>
+                `;
+            }).join('');
         }
 
         function renderWorkoutTab() {
@@ -1390,6 +1539,8 @@
             const category = categories.find(c => c.id === pendingExercise.categoryId);
             const categoryIcon = getCategoryIcon(category?.name);
             const categoryColor = category?.color || '#6366f1';
+            const exerciseType = pendingExercise.exerciseType || 'STRENGTH';
+            const typeConfig = getExerciseTypeConfig(exerciseType);
             
             return `
                 <div class="workout-card">
@@ -1400,7 +1551,7 @@
                             </div>
                             <div>
                                 <div class="exercise-name">${pendingExercise.name}</div>
-                                <div class="exercise-category">${category?.name || ''}</div>
+                                <div class="exercise-category">${category?.name || ''} • ${typeConfig.label}</div>
                             </div>
                         </div>
                         <div class="card-actions">
@@ -1409,25 +1560,45 @@
                         </div>
                     </div>
                     <div class="sets-container" id="pending-sets">
-                        ${pendingSets.map((s, idx) => renderPendingSet(idx, s)).join('')}
+                        ${pendingSets.map((s, idx) => renderPendingSet(idx, s, exerciseType)).join('')}
                     </div>
                     <button class="add-set-btn" onclick="addPendingSet()">+ Добавить подход</button>
                 </div>
             `;
         }
 
-        function renderPendingSet(index, set) {
+        function renderPendingSet(index, set, exerciseType) {
+            const config = getExerciseTypeConfig(exerciseType);
+            
+            const fieldsHtml = config.fields.map(field => {
+                if (field.type === 'select') {
+                    const optionsHtml = field.options.map(opt => 
+                        `<option value="${opt.value}" ${set[field.name] === opt.value ? 'selected' : ''}>${opt.label}</option>`
+                    ).join('');
+                    return `
+                        <select class="set-input" 
+                                onchange="updatePendingSet(${index}, '${field.name}', this.value)">
+                            <option value="">${field.placeholder || field.label}</option>
+                            ${optionsHtml}
+                        </select>
+                    `;
+                }
+                
+                const inputMode = field.type === 'decimal' ? 'decimal' : 'numeric';
+                const value = set[field.name] || '';
+                
+                return `
+                    <input type="number" class="set-input" placeholder="${field.placeholder || field.label}" 
+                           value="${value}" 
+                           oninput="updatePendingSet(${index}, '${field.name}', this.value)"
+                           inputmode="${inputMode}">
+                `;
+            }).join('');
+            
             return `
                 <div class="set-row" id="pending-set-${index}">
                     <div class="set-number">${index + 1}</div>
-                    <input type="number" class="set-input" placeholder="Вес" 
-                           value="${set.weight || ''}" 
-                           oninput="updatePendingSet(${index}, 'weight', this.value)"
-                           inputmode="decimal">
-                    <input type="number" class="set-input" placeholder="Повт." 
-                           value="${set.reps || ''}" 
-                           oninput="updatePendingSet(${index}, 'reps', this.value)"
-                           inputmode="numeric">
+                    ${fieldsHtml}
                     <button class="set-delete" onclick="deletePendingSet(${index})">×</button>
                 </div>
             `;
@@ -1469,13 +1640,16 @@
             closeExerciseModal();
             
             pendingExercise = exercise;
-            pendingSets = [{ weight: null, reps: null }]; // Start with one empty set
+            const typeConfig = getExerciseTypeConfig(exercise.exerciseType || 'STRENGTH');
+            pendingSets = [{ ...typeConfig.defaultSet }]; // Start with one empty set with correct fields
             
             renderWorkoutTab();
         }
 
         function addPendingSet() {
-            pendingSets.push({ weight: null, reps: null });
+            const exerciseType = pendingExercise?.exerciseType || 'STRENGTH';
+            const typeConfig = getExerciseTypeConfig(exerciseType);
+            pendingSets.push({ ...typeConfig.defaultSet });
             renderWorkoutTab();
         }
 
@@ -1503,8 +1677,14 @@
         }
 
         async function confirmPendingExercise() {
+            const exerciseType = pendingExercise?.exerciseType || 'STRENGTH';
+            const config = getExerciseTypeConfig(exerciseType);
+            
             // Validate that at least one set has data
-            const validSets = pendingSets.filter(s => s.weight || s.reps);
+            const validSets = pendingSets.filter(set => {
+                return config.fields.some(field => set[field.name] !== null && set[field.name] !== '');
+            });
+            
             if (validSets.length === 0) {
                 showToast('Заполните хотя бы один подход', 'error');
                 return;
@@ -1520,14 +1700,26 @@
                 // Add all sets
                 for (let i = 0; i < pendingSets.length; i++) {
                     const set = pendingSets[i];
-                    if (set.weight || set.reps) {
-                        await apiCall('/workout/set', 'POST', {
-                            workoutExerciseId: workoutExercise.id,
-                            setNumber: i + 1,
-                            weight: set.weight,
-                            reps: set.reps ? parseInt(set.reps) : null
-                        });
-                    }
+                    
+                    // Check if set has any data
+                    const hasData = config.fields.some(field => set[field.name] !== null && set[field.name] !== '');
+                    if (!hasData) continue;
+                    
+                    // Build set data object with all fields
+                    const setData = {
+                        workoutExerciseId: workoutExercise.id,
+                        setNumber: i + 1,
+                        weight: set.weight ? parseFloat(set.weight) : null,
+                        reps: set.reps ? parseInt(set.reps) : null,
+                        duration: set.duration ? parseInt(set.duration) : null,
+                        distance: set.distance ? parseFloat(set.distance) : null,
+                        style: set.style || null,
+                        workTime: set.workTime ? parseInt(set.workTime) : null,
+                        restTime: set.restTime ? parseInt(set.restTime) : null,
+                        intensity: set.intensity ? parseInt(set.intensity) : null
+                    };
+                    
+                    await apiCall('/workout/set', 'POST', setData);
                 }
                 
                 // Clear pending state
@@ -1600,21 +1792,25 @@
         }
 
         function renderHistoryExercise(exercise) {
+            const exerciseType = exercise.exerciseType || 'STRENGTH';
+            const typeConfig = getExerciseTypeConfig(exerciseType);
+            
             return `
                 <div class="history-exercise">
                     <div class="history-exercise-header">
                         <div class="history-exercise-name">
                             ${exercise.exerciseName}
                             <span class="history-exercise-category">${exercise.categoryName}</span>
+                            <span class="history-exercise-category" style="background: var(--accent-primary); color: white; margin-left: 4px;">${typeConfig.label}</span>
                         </div>
                         <div class="history-exercise-actions">
-                            <button class="history-action-btn edit" onclick="openEditModal(${exercise.id})" title="Редактировать">✏️</button>
+                            <button class="history-action-btn edit" onclick="openEditModal(${exercise.id}, '${exerciseType}')" title="Редактировать">✏️</button>
                             <button class="history-action-btn delete" onclick="deleteWorkoutExercise(${exercise.id})" title="Удалить">🗑</button>
                         </div>
                     </div>
                     <div class="history-sets">
                         ${exercise.sets.map(s => `
-                            <span class="history-set">${s.setNumber}: ${s.weight || '-'}кг × ${s.reps || '-'}</span>
+                            <span class="history-set">${s.setNumber}: ${formatSetDisplay(s, exerciseType)}</span>
                         `).join('')}
                     </div>
                 </div>
@@ -1641,8 +1837,9 @@
         }
 
         // Edit Exercise Modal
-        async function openEditModal(workoutExerciseId) {
+        async function openEditModal(workoutExerciseId, exerciseType) {
             editingWorkoutExerciseId = workoutExerciseId;
+            editingExerciseType = exerciseType || 'STRENGTH';
             
             // Find the exercise data from loaded history
             let exerciseData = null;
@@ -1652,6 +1849,7 @@
                 const found = w.exercises.find(e => e.id === workoutExerciseId);
                 if (found) {
                     exerciseData = found;
+                    editingExerciseType = found.exerciseType || 'STRENGTH';
                     break;
                 }
             }
@@ -1661,14 +1859,22 @@
                 return;
             }
             
+            // Copy all relevant fields from sets
             editingSets = exerciseData.sets.map(s => ({
                 id: s.id,
                 setNumber: s.setNumber,
                 weight: s.weight,
-                reps: s.reps
+                reps: s.reps,
+                duration: s.duration,
+                distance: s.distance,
+                style: s.style,
+                workTime: s.workTime,
+                restTime: s.restTime,
+                intensity: s.intensity
             }));
             
-            document.getElementById('editModalTitle').textContent = exerciseData.exerciseName;
+            const typeConfig = getExerciseTypeConfig(editingExerciseType);
+            document.getElementById('editModalTitle').textContent = `${exerciseData.exerciseName} (${typeConfig.label})`;
             renderEditModalContent();
             document.getElementById('editModal').classList.add('active');
         }
@@ -1684,24 +1890,49 @@
         }
 
         function renderEditSet(index, set) {
+            const config = getExerciseTypeConfig(editingExerciseType);
+            
+            const fieldsHtml = config.fields.map(field => {
+                if (field.type === 'select') {
+                    const optionsHtml = field.options.map(opt => 
+                        `<option value="${opt.value}" ${set[field.name] === opt.value ? 'selected' : ''}>${opt.label}</option>`
+                    ).join('');
+                    return `
+                        <select class="set-input" 
+                                onchange="updateEditSet(${index}, '${field.name}', this.value)">
+                            <option value="">${field.placeholder || field.label}</option>
+                            ${optionsHtml}
+                        </select>
+                    `;
+                }
+                
+                const inputMode = field.type === 'decimal' ? 'decimal' : 'numeric';
+                const value = set[field.name] || '';
+                
+                return `
+                    <input type="number" class="set-input" placeholder="${field.placeholder || field.label}" 
+                           value="${value}" 
+                           oninput="updateEditSet(${index}, '${field.name}', this.value)"
+                           inputmode="${inputMode}">
+                `;
+            }).join('');
+            
             return `
                 <div class="set-row">
                     <div class="set-number">${index + 1}</div>
-                    <input type="number" class="set-input" placeholder="Вес" 
-                           value="${set.weight || ''}" 
-                           oninput="updateEditSet(${index}, 'weight', this.value)"
-                           inputmode="decimal">
-                    <input type="number" class="set-input" placeholder="Повт." 
-                           value="${set.reps || ''}" 
-                           oninput="updateEditSet(${index}, 'reps', this.value)"
-                           inputmode="numeric">
+                    ${fieldsHtml}
                     <button class="set-delete" onclick="deleteEditSet(${index})">×</button>
                 </div>
             `;
         }
 
         function addEditSet() {
-            editingSets.push({ id: null, setNumber: editingSets.length + 1, weight: null, reps: null });
+            const typeConfig = getExerciseTypeConfig(editingExerciseType);
+            editingSets.push({ 
+                id: null, 
+                setNumber: editingSets.length + 1, 
+                ...typeConfig.defaultSet 
+            });
             renderEditModalContent();
         }
 
@@ -1740,8 +1971,14 @@
                 for (const set of existingSets) {
                     await apiCall('/workout/set', 'PUT', {
                         setId: set.id,
-                        weight: set.weight,
-                        reps: set.reps ? parseInt(set.reps) : null
+                        weight: set.weight ? parseFloat(set.weight) : null,
+                        reps: set.reps ? parseInt(set.reps) : null,
+                        duration: set.duration ? parseInt(set.duration) : null,
+                        distance: set.distance ? parseFloat(set.distance) : null,
+                        style: set.style || null,
+                        workTime: set.workTime ? parseInt(set.workTime) : null,
+                        restTime: set.restTime ? parseInt(set.restTime) : null,
+                        intensity: set.intensity ? parseInt(set.intensity) : null
                     });
                 }
                 
@@ -1750,8 +1987,14 @@
                     await apiCall('/workout/set', 'POST', {
                         workoutExerciseId: editingWorkoutExerciseId,
                         setNumber: set.setNumber,
-                        weight: set.weight,
-                        reps: set.reps ? parseInt(set.reps) : null
+                        weight: set.weight ? parseFloat(set.weight) : null,
+                        reps: set.reps ? parseInt(set.reps) : null,
+                        duration: set.duration ? parseInt(set.duration) : null,
+                        distance: set.distance ? parseFloat(set.distance) : null,
+                        style: set.style || null,
+                        workTime: set.workTime ? parseInt(set.workTime) : null,
+                        restTime: set.restTime ? parseInt(set.restTime) : null,
+                        intensity: set.intensity ? parseInt(set.intensity) : null
                     });
                 }
                 

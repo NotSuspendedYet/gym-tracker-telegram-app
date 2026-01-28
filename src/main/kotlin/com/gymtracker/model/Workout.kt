@@ -40,6 +40,17 @@ data class WorkoutExercise(
     var notes: String? = null
 )
 
+/**
+ * Стили плавания для упражнений типа SWIMMING
+ */
+enum class SwimmingStyle {
+    FREESTYLE,   // Кроль
+    BREASTSTROKE,// Брасс
+    BACKSTROKE,  // На спине
+    BUTTERFLY,   // Баттерфляй
+    MEDLEY       // Комплекс
+}
+
 @Entity
 @Table(name = "exercise_sets")
 data class ExerciseSet(
@@ -53,18 +64,28 @@ data class ExerciseSet(
     
     val setNumber: Int,
     
-    var weight: Double? = null,
+    // === Поля для силовых упражнений (STRENGTH, WEIGHTED_BODYWEIGHT) ===
+    var weight: Double? = null,       // Вес в кг
+    var reps: Int? = null,            // Количество повторений
     
-    var reps: Int? = null,
+    // === Поля для статики и кардио (STATIC, CARDIO_TIME, CARDIO_DISTANCE) ===
+    var duration: Int? = null,        // Время в секундах
+    var distance: Double? = null,     // Расстояние в метрах
     
-    var duration: Int? = null, // in seconds, for planks etc.
+    // === Поля для плавания (SWIMMING) ===
+    @Enumerated(EnumType.STRING)
+    var style: SwimmingStyle? = null, // Стиль плавания
     
-    var distance: Double? = null, // in meters, for cardio
+    // === Поля для интервальных тренировок (INTERVALS) ===
+    var workTime: Int? = null,        // Время работы в секундах
+    var restTime: Int? = null,        // Время отдыха в секундах
     
+    // === Поля для кардио с уровнем (CARDIO_TIME) ===
+    var intensity: Int? = null,       // Уровень интенсивности (1-10 или ватты)
+    
+    // === Метаданные ===
     var isWarmup: Boolean = false,
-    
     var isToFailure: Boolean = false,
-    
     var notes: String? = null
 )
 

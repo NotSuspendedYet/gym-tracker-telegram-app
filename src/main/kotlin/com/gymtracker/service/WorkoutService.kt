@@ -8,10 +8,20 @@ import java.time.LocalDate
 
 data class SetData(
     val setNumber: Int,
+    // Силовые
     val weight: Double? = null,
     val reps: Int? = null,
+    // Статика/Кардио
     val duration: Int? = null,
     val distance: Double? = null,
+    // Плавание
+    val style: String? = null,
+    // Интервалы
+    val workTime: Int? = null,
+    val restTime: Int? = null,
+    // Кардио с уровнем
+    val intensity: Int? = null,
+    // Метаданные
     val isWarmup: Boolean = false,
     val isToFailure: Boolean = false,
     val notes: String? = null
@@ -87,6 +97,15 @@ class WorkoutService(
             IllegalArgumentException("Workout exercise not found")
         }
         
+        // Конвертируем строку стиля в enum
+        val swimmingStyle = setData.style?.let { styleName ->
+            try {
+                SwimmingStyle.valueOf(styleName.uppercase())
+            } catch (e: IllegalArgumentException) {
+                null
+            }
+        }
+        
         return exerciseSetRepository.save(
             ExerciseSet(
                 workoutExercise = workoutExercise,
@@ -95,6 +114,10 @@ class WorkoutService(
                 reps = setData.reps,
                 duration = setData.duration,
                 distance = setData.distance,
+                style = swimmingStyle,
+                workTime = setData.workTime,
+                restTime = setData.restTime,
+                intensity = setData.intensity,
                 isWarmup = setData.isWarmup,
                 isToFailure = setData.isToFailure,
                 notes = setData.notes
@@ -108,11 +131,24 @@ class WorkoutService(
             IllegalArgumentException("Set not found")
         }
         
+        // Конвертируем строку стиля в enum
+        val swimmingStyle = setData.style?.let { styleName ->
+            try {
+                SwimmingStyle.valueOf(styleName.uppercase())
+            } catch (e: IllegalArgumentException) {
+                null
+            }
+        }
+        
         set.apply {
             weight = setData.weight
             reps = setData.reps
             duration = setData.duration
             distance = setData.distance
+            style = swimmingStyle
+            workTime = setData.workTime
+            restTime = setData.restTime
+            intensity = setData.intensity
             isWarmup = setData.isWarmup
             isToFailure = setData.isToFailure
             notes = setData.notes
@@ -167,7 +203,12 @@ class WorkoutService(
     }
     
     @Transactional
-    fun createCustomExercise(name: String, categoryId: Long, userId: Long): Exercise {
+    fun createCustomExercise(
+        name: String, 
+        categoryId: Long, 
+        userId: Long,
+        exerciseType: ExerciseType = ExerciseType.STRENGTH
+    ): Exercise {
         val category = exerciseCategoryRepository.findById(categoryId).orElseThrow {
             IllegalArgumentException("Category not found")
         }
@@ -176,6 +217,7 @@ class WorkoutService(
             Exercise(
                 name = name,
                 category = category,
+                exerciseType = exerciseType,
                 isCustom = true,
                 createdByUserId = userId
             )
