@@ -1211,17 +1211,10 @@
             BODYWEIGHT: {
                 label: 'Своё тело',
                 fields: [
-                    { name: 'reps', label: 'Повторения', unit: '', type: 'integer', placeholder: 'Повторения' }
+                    { name: 'reps', label: 'Повторения', unit: '', type: 'integer', placeholder: 'Повт.' },
+                    { name: 'weight', label: '+Вес', unit: 'кг', type: 'decimal', placeholder: '+кг', optional: true }
                 ],
-                defaultSet: { reps: null }
-            },
-            WEIGHTED_BODYWEIGHT: {
-                label: 'С отягощением',
-                fields: [
-                    { name: 'weight', label: 'Доп. вес', unit: 'кг', type: 'decimal', placeholder: 'Доп. вес' },
-                    { name: 'reps', label: 'Повт.', unit: '', type: 'integer', placeholder: 'Повт.' }
-                ],
-                defaultSet: { weight: null, reps: null }
+                defaultSet: { reps: null, weight: null }
             },
             STATIC: {
                 label: 'Статика',
@@ -1242,9 +1235,10 @@
                 label: 'Кардио',
                 fields: [
                     { name: 'duration', label: 'Время', unit: 'мин', type: 'duration', placeholder: 'Минуты' },
-                    { name: 'intensity', label: 'Уровень', unit: '', type: 'integer', placeholder: '1-10' }
+                    { name: 'intensity', label: 'Уровень', unit: '', type: 'integer', placeholder: '1-10', optional: true },
+                    { name: 'distance', label: 'Дистанция', unit: 'м', type: 'integer', placeholder: 'Метры', optional: true }
                 ],
-                defaultSet: { duration: null, intensity: null }
+                defaultSet: { duration: null, intensity: null, distance: null }
             },
             SWIMMING: {
                 label: 'Плавание',
@@ -1292,17 +1286,19 @@
             
             switch (exerciseType) {
                 case 'STRENGTH':
-                case 'WEIGHTED_BODYWEIGHT':
                     return `${set.weight || '-'}кг × ${set.reps || '-'}`;
                 case 'BODYWEIGHT':
-                    return `${set.reps || '-'} повт.`;
+                    // Показываем вес если он указан (отягощение)
+                    const weightSuffix = set.weight ? ` +${set.weight}кг` : '';
+                    return `${set.reps || '-'} повт.${weightSuffix}`;
                 case 'STATIC':
                     return formatDuration(set.duration);
                 case 'CARDIO_DISTANCE':
                     return `${formatDistance(set.distance)} / ${formatDuration(set.duration)}`;
                 case 'CARDIO_TIME':
                     const level = set.intensity ? ` (ур. ${set.intensity})` : '';
-                    return `${formatDuration(set.duration)}${level}`;
+                    const dist = set.distance ? ` ${formatDistance(set.distance)}` : '';
+                    return `${formatDuration(set.duration)}${level}${dist}`;
                 case 'SWIMMING':
                     const style = set.style ? SWIMMING_STYLE_LABELS[set.style] || set.style : '';
                     return `${set.distance || '-'}м / ${formatDuration(set.duration)}${style ? ' ' + style : ''}`;
@@ -1606,15 +1602,16 @@
 
         function getCategoryIcon(categoryName) {
             const icons = {
-                'Спина': '🔙',
                 'Грудь': '💪',
+                'Спина': '🔙',
+                'Плечи': '🏋️',
                 'Бицепс': '💪',
                 'Трицепс': '💪',
                 'Ноги': '🦵',
-                'Плечи': '🏋️',
                 'Пресс': '🎯',
                 'Кардио': '🏃',
-                'Другое': '⚡'
+                'Плавание': '🏊',
+                'Растяжка и мобильность': '🧘'
             };
             return icons[categoryName] || '💪';
         }

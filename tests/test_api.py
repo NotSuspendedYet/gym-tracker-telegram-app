@@ -366,7 +366,7 @@ class GymTrackerAPITester:
         types = set(e.get('exerciseType') for e in exercises if e.get('exerciseType'))
         
         expected_types = {
-            'STRENGTH', 'BODYWEIGHT', 'WEIGHTED_BODYWEIGHT', 
+            'STRENGTH', 'BODYWEIGHT', 
             'STATIC', 'CARDIO_DISTANCE', 'CARDIO_TIME', 
             'SWIMMING', 'INTERVALS'
         }
@@ -374,7 +374,7 @@ class GymTrackerAPITester:
         missing = expected_types - types
         
         if not missing:
-            log_success("Все 8 типов упражнений присутствуют!")
+            log_success("Все 7 типов упражнений присутствуют!")
             return True
         else:
             log_error(f"Отсутствуют типы: {', '.join(missing)}")

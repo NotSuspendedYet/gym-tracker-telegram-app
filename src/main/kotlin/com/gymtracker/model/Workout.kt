@@ -64,7 +64,7 @@ data class ExerciseSet(
     
     val setNumber: Int,
     
-    // === Поля для силовых упражнений (STRENGTH, WEIGHTED_BODYWEIGHT) ===
+    // === Поля для силовых упражнений (STRENGTH) и bodyweight с отягощением (BODYWEIGHT) ===
     var weight: Double? = null,       // Вес в кг
     var reps: Int? = null,            // Количество повторений
     

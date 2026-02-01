@@ -14,6 +14,7 @@ interface UserRepository : JpaRepository<User, Long> {
 @Repository
 interface ExerciseCategoryRepository : JpaRepository<ExerciseCategory, Long> {
     fun findByNameIgnoreCase(name: String): ExerciseCategory?
+    fun findByCatalogId(catalogId: String): ExerciseCategory?
 }
 
 @Repository
@@ -21,6 +22,7 @@ interface ExerciseRepository : JpaRepository<Exercise, Long> {
     fun findByCategoryId(categoryId: Long): List<Exercise>
     fun findByNameContainingIgnoreCase(name: String): List<Exercise>
     fun findByIsCustomFalseOrCreatedByUserId(userId: Long): List<Exercise>
+    fun findByCatalogId(catalogId: String): Exercise?
 }
 
 @Repository
